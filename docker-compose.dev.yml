@@ -1,0 +1,132 @@
+version: '2'
+services:
+
+  maildev:
+    image: djfarrelly/maildev
+    ports:
+      - "${CLOVIS_MAILDEV_PORT}:80"
+
+
+  documentation:
+    build:
+      context: .
+      dockerfile: documentation/Dockerfile.dev
+
+    volumes:
+        - ./documentation/public:/usr/src/documentation/public:ro
+
+    command: yarn run start
+
+    ports:
+      - "${CLOVIS_DOC_PORT}:3000"
+
+    links:
+      - api-server:api-server
+
+
+  home-server:
+    environment:
+      CLOVIS_APP_URL: "${LOCALHOST_ADDRESS}:${CLOVIS_CLIENT_PORT}"
+      CLOVIS_SMTP_HOST: "maildev"
+      CLOVIS_SMTP_PORT: "25"
+      CLOVIS_GOOGLE_ANALYTICS_ID: "${CLOVIS_GOOGLE_ANALYTICS_ID}"
+
+    build:
+      context: .
+      dockerfile: home-server/Dockerfile.dev
+
+    volumes:
+      - ./home-server/src:/usr/src/home-server/src:ro
+      - ./home-server/scripts:/usr/src/home-server/scripts:ro
+      - ./home/src:/usr/src/home/src:ro
+      - ./home/img:/usr/src/home/img:ro
+      - ./home/gulpfile.js:/usr/src/home/gulpfile.js:ro
+      - ./email/src:/usr/src/email/src:ro
+
+    command: ./scripts/entrypoint.dev.sh
+
+    ports:
+      - "${CLOVIS_HOME_PORT}:3000"
+
+    links:
+      - mongo:mongo
+      - maildev:maildev
+
+    tty: true
+
+
+  client-server:
+    environment:
+      # through Docker network only, not accessible from the host
+      CLOVIS_PRIVATE_API_URL: 'http://api-server:3000'
+
+      # accessible from the host's browser
+      CLOVIS_PUBLIC_API_URL: "${LOCALHOST_ADDRESS}:${CLOVIS_API_PORT}"
+
+      CLOVIS_HOME_URL: "${LOCALHOST_ADDRESS}:${CLOVIS_HOME_PORT}"
+
+      CLOVIS_CLIENT_URL: "${LOCALHOST_ADDRESS}:${CLOVIS_CLIENT_PORT}"
+
+    links:
+      - api-server:api-server
+
+    build:
+      context: .
+      dockerfile: ./client-server/Dockerfile.dev
+
+    volumes:
+      - ./client-server/src:/usr/src/client-server/src:ro
+
+      - ./client/static:/usr/src/client/static:ro
+      - ./client/src:/usr/src/client/src:ro
+      - ./client/webpack.config.js:/usr/src/client/webpack.config.js:ro
+
+    command: /usr/src/client-server/scripts/entrypoint.dev.sh
+
+    ports:
+      - "${CLOVIS_CLIENT_PORT}:3000"
+
+    tty: true
+
+
+
+  api-server:
+    environment:
+      CLOVIS_CLIENT_URL: "${LOCALHOST_ADDRESS}:${CLOVIS_CLIENT_PORT}"
+      AWS_ACCESS_KEY_ID: "${CLOVIS_AWS_ID}"
+      AWS_SECRET_ACCESS_KEY: "${CLOVIS_AWS_SECRET}"
+      CLOVIS_RUN_SLOW_TESTS: "${CLOVIS_RUN_SLOW_TESTS}"
+      CLOVIS_SMTP_HOST: "maildev"
+      CLOVIS_SMTP_PORT: "25"
+      GOOGLEMAP_KEY: "${CLOVIS_GOOGLEMAP_KEY}"
+    # configuration at build time
+    build:
+      context: .
+      dockerfile: api-server/Dockerfile.dev
+
+    volumes:
+      - ./api-server/src:/usr/src/api-server/src:ro
+      - ./api-server/resources:/usr/src/api-server/resources:ro
+      - ./email/src:/usr/src/email/src:ro
+      - ./sms/src:/usr/src/sms/src:ro
+      - ./api-server/scripts:/usr/src/api-server/scripts:ro
+
+    # Override the default command
+    command: yarn run watch
+
+    ports:
+      # also update CLOVIS_PUBLIC_API_URL if you change this
+      - "${CLOVIS_API_PORT}:3000"
+
+    links:
+      - mongo:mongo
+      - maildev:maildev
+
+    tty: true
+
+
+
+  mongo:
+    image: mongo
+    logging:
+      driver: "none"

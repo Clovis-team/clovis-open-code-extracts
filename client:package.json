@@ -1,0 +1,47 @@
+{
+  "name": "client-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel --source-maps true src --out-dir dist",
+    "start": "node --require babel-polyfill dist/index.js",
+    "watch": "nodemon -e js,html,scss -w src -w ../client/static -w ../client/src/scenes/landing -- --require babel-polyfill ./node_modules/.bin/babel-node src/index.js",
+    "test": "yarn run lint",
+    "lint": "eslint .",
+    "lint:watch": "nodemon node_modules/.bin/eslint ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-latest": "^6.24.1",
+    "http-proxy": "^1.16.2",
+    "invariant": "^2.2.2",
+    "isomorphic-fetch": "^2.2.1",
+    "koa": "^2.0.0",
+    "koa-bodyparser": "^3.2.0",
+    "koa-compress": "^2.0.0",
+    "koa-conditional-get": "^2.0.0",
+    "koa-etag": "^3.0.0",
+    "koa-mount": "^2.0.0",
+    "koa-router": "^7.0.1",
+    "koa-static": "^3.0.0",
+    "lodash": "^4.17.2",
+    "module-alias": "^2.0.1",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.14.1",
+    "eslint-config-clovis": "^1.0.2",
+    "eslint-plugin-react": "^6.9.0",
+    "nodemon": "^1.11.0",
+    "prop-types": "^15.5.8"
+  }
+}
