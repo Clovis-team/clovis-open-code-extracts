@@ -1,2 +1,6 @@
-# clovis-open-code-extracts
-Open Clovis code for external developers who want to work with us 
+# Just beautifull Clovis files to read 
+
+Just read the files of this repo to see how we work 👐
+
+
+
